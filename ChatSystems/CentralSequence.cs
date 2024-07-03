@@ -20,6 +20,13 @@ namespace DistributedChat.ChatSystems
     {
         private int _currentSequenceNumber = 0;
 
+        public Sequencer() { }
+
+        public Sequencer(int sequence)
+        {
+            _currentSequenceNumber = sequence;
+        }
+
         public int GetNextSequenceNumber()
         {
             return Interlocked.Increment(ref _currentSequenceNumber);

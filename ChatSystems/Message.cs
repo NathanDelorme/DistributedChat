@@ -18,6 +18,8 @@ namespace DistributedChat.ChatSystems
             this._content = content;
         }
 
+        public bool IsBroadcast() => this._isBroadcast;
+
         public int GetSequenceNumber() => this._sequenceNumber;
 
         public string GetSender() => this._sender;
@@ -28,19 +30,19 @@ namespace DistributedChat.ChatSystems
 
         public string MsgToString()
         {
-            return $"{_sequenceNumber}:{_sender}:{_recipient}:{_content}";
+            return $"{(_isBroadcast ? 1 : 0).ToString()}:{_sequenceNumber}:{_sender}:{_recipient}:{_content}";
         }
 
         public static Message MsgFromString(string messageString)
         {
             string[] parts = messageString.Split(':');
-            return new Message(int.Parse(parts[0]), parts[1], parts[2], messageString.Substring(parts[0].Length + parts[1].Length + parts[2].Length + 3));
+            return new Message(parts[0] == "1" ? true : false, int.Parse(parts[1]), parts[2], parts[3], messageString.Substring(parts[0].Length + parts[1].Length + parts[2].Length + parts[3].Length + 4));
         }
 
         public override string ToString()
         {
             return "============================\n" +
-                $"Sequence Number {this._sequenceNumber} - Sender {this._sender} - Recipient {this._recipient}\n" +
+                $"{(_isBroadcast ? "Broadcast - " : "")}Sequence Number {this._sequenceNumber} - Sender {this._sender} - Recipient {this._recipient}\n" +
                 $"Content\n{this._content}\n";
         }
     }

@@ -42,7 +42,7 @@ namespace DistributedChat.Views
                 richTextBoxChatBox.Invoke(new MethodInvoker(delegate
                 {
                     ;
-                    richTextBoxChatBox.AppendText($"From {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
+                    richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
                     richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
                 }));
                 return;
@@ -83,7 +83,7 @@ namespace DistributedChat.Views
             {
                 // send message to all chatters
                 foreach (Chatter chatter in AuthenticationServer.GetChatters())
-                    _chatter.SendMessage("Broadcast\n" + message, chatter.GetPort());
+                    _chatter.SendMessage(true, message, chatter.GetPort());
             }
             else
             {
@@ -95,7 +95,7 @@ namespace DistributedChat.Views
                 }
 
                 // send message to recipient
-                _chatter.SendMessage(message, recipientPort);
+                _chatter.SendMessage(false, message, recipientPort);
             }
 
             richTextBoxMessage.Clear();

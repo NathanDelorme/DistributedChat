@@ -15,8 +15,8 @@ namespace DistributedChat.ChatSystems
 
         private static int _messageCounter = 0;
 
-        private Dictionary<string, Dictionary<int, string>> _messagesHistory;
-        private Dictionary<string, int> _clocks;
+        private Dictionary<string, Dictionary<int, Message>> _messagesHistory;
+        private Dictionary<string, Sequencer> _clocks;
 
         private readonly string _username;
         private readonly string _password;
@@ -33,8 +33,8 @@ namespace DistributedChat.ChatSystems
             _password = password;
             _port = port;
 
-            _messagesHistory = new Dictionary<string, Dictionary<int, string>>();
-            _clocks = new Dictionary<string, int>();
+            _messagesHistory = new Dictionary<string, Dictionary<int, Message>>();
+            _clocks = new Dictionary<string, Sequencer>();
         }
 
         public void Start()
@@ -45,13 +45,38 @@ namespace DistributedChat.ChatSystems
             _thread.Start();
         }
 
-        public async void SendMessage(string messageContent, int targetPort)
+        public async void SendMessage(bool isBroadcast, string messageContent, int targetPort)
         {
             if (_udpClient == null)
                 throw new Exception("Chatter is not started.");
 
-            int sequenceNumber = CentralSequencer.GetNextSequenceNumber();
-            Message message = new Message(sequenceNumber, AuthenticationServer.GetChatterUsername(_port), AuthenticationServer.GetChatterUsername(targetPort), messageContent);
+            string targetUsername = isBroadcast ? "broadcast" : GetConversationKey(AuthenticationServer.GetChatterUsername(_port));
+
+            
+            if (!_clocks.ContainsKey(targetUsername))
+                _clocks[targetUsername] = new Sequencer();
+
+            int sequenceNumber = _clocks[targetUsername].GetNextSequenceNumber();
+            Message message = new Message(isBroadcast, sequenceNumber, _username, AuthenticationServer.GetChatterUsername(_port), messageContent);
+            _messageCounter++;
+
+            Debug.WriteLine($"Before {_messageCounter}");
+            await Task.Run(() =>
+            {
+                Thread.Sleep(_messageCounter == 1 ? 5000 : 1000);
+            });
+            Debug.WriteLine($"After {_messageCounter}");
+
+
+            byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
+            IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), targetPort);
+            _udpClient.Send(data, data.Length, targetEndPoint);
+            Debug.WriteLine($"Sent {_messageCounter}");
+
+            MessageSent?.Invoke();
+
+            /*int sequenceNumber = CentralSequencer.GetNextSequenceNumber();
+            Message message = new Message(isBroadcast, sequenceNumber, AuthenticationServer.GetChatterUsername(_port), AuthenticationServer.GetChatterUsername(targetPort), messageContent);
             _messageCounter++;
 
             Debug.WriteLine($"Before {_messageCounter}");
@@ -64,7 +89,7 @@ namespace DistributedChat.ChatSystems
             byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
             IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), targetPort);
             _udpClient.Send(data, data.Length, targetEndPoint);
-            Debug.WriteLine($"Sent {_messageCounter}");
+            Debug.WriteLine($"Sent {_messageCounter}");*/
         }
 
         private void ReceiveMessages()
@@ -79,34 +104,45 @@ namespace DistributedChat.ChatSystems
                 Message message = Message.MsgFromString(messageString);
 
                 Debug.WriteLine($"Message received on port {_port}: {message.GetContent()} with sequence number {message.GetSequenceNumber()}");
-                MessageReceived?.Invoke(message);
 
                 lock (_messagesHistory)
                 {
-                    if (!_messagesHistory.ContainsKey(message.GetRecipient()))
-                        _messagesHistory[message.GetRecipient()] = new Dictionary<int, string>();
+                    string conversationKey = message.IsBroadcast() ? "broadcast" : GetConversationKey(AuthenticationServer.GetChatterUsername(_port));
 
-                    _messagesHistory[message.GetRecipient()][message.GetSequenceNumber()] = message.GetContent();
+                    if (!_messagesHistory.ContainsKey(conversationKey))
+                        _messagesHistory[conversationKey] = new Dictionary<int, Message>();
+
+                    _messagesHistory[conversationKey][message.GetSequenceNumber()] = message;
 
                     // Process messages in order
-                    Dictionary<int, string> messages = _messagesHistory[message.GetRecipient()];
-                    int nextSequence = _clocks.ContainsKey(message.GetRecipient()) ? _clocks[message.GetRecipient()] : 0;
+                    Dictionary<int, Message> messages = _messagesHistory[conversationKey];
+                    int nextSequence = _clocks.ContainsKey(conversationKey) ? _clocks[conversationKey].GetNextSequenceNumber() - 1 : 0;
+                    Debug.WriteLine($"Next sequence: {nextSequence}");
 
                     while (messages.ContainsKey(nextSequence))
                     {
+                        Debug.WriteLine($"Processing message: {nextSequence}");
                         ProcessMessage(messages[nextSequence]);
+                        Debug.WriteLine($"Removing message: {nextSequence}");
                         messages.Remove(nextSequence);
                         nextSequence++;
                     }
 
-                    _clocks[message.GetRecipient()] = nextSequence;
+                    if (_clocks.ContainsKey(conversationKey))
+                        _clocks[conversationKey] = new Sequencer(nextSequence);
                 }
             }
         }
 
-        private void ProcessMessage(string content)
+        private void ProcessMessage(Message message)
         {
-            Debug.WriteLine($"Processed message: {content}");
+            Debug.WriteLine($"Processed message: {message.GetSequenceNumber()}");
+            MessageReceived?.Invoke(message);
+        }
+
+        private string GetConversationKey(string targetUsername)
+        {
+            return $"{_username}-{targetUsername}";
         }
 
         public void Close()
