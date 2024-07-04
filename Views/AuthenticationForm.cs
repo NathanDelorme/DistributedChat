@@ -40,7 +40,7 @@ namespace DistributedChat
             buttonInstantiate.Enabled = true;
         }
 
-        private async void InstantiateClient(object sender, EventArgs e)
+        private void InstantiateClient(object sender, EventArgs e)
         {
             Chatter chatter = new Chatter(textBoxUsername.Text, textBoxPassword.Text, (int)numericUpDownPort.Value);
 

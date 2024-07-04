@@ -83,19 +83,15 @@ namespace DistributedChat.Views
             {
                 // send message to all chatters
                 foreach (Chatter chatter in AuthenticationServer.GetChatters())
-                    _chatter.SendMessage(true, message, chatter.GetPort());
+                {
+                    if (chatter != _chatter)
+                        _chatter.SendMessage(true, chatter.GetUsername(), message);
+                }
             }
             else
             {
-                int recipientPort = AuthenticationServer.GetChatterPort(recipient);
-                if (recipientPort == -1)
-                {
-                    MessageBox.Show("Recipient not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
                 // send message to recipient
-                _chatter.SendMessage(false, message, recipientPort);
+                _chatter.SendMessage(false, recipient, message);
             }
 
             richTextBoxMessage.Clear();
