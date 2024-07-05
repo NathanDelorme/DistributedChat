@@ -33,6 +33,7 @@ namespace DistributedChat.ChatSystems
                 {
                     Chatters[i] = null;
                     ChattersChanged?.Invoke();
+                    client.Close();
                     break;
                 }
             }

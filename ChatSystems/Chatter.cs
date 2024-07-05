@@ -23,6 +23,7 @@ namespace DistributedChat.ChatSystems
         private IPEndPoint? _endPoint;
         private readonly int _port;
         private Thread? _thread;
+        private CancellationTokenSource _cancellationTokenSource;
 
         private Dictionary<string, int> _clocks;
 
@@ -40,50 +41,22 @@ namespace DistributedChat.ChatSystems
             _messageBuffers = new Dictionary<string, Dictionary<int, Message>>();
             _expectedSequenceNumbers = new Dictionary<string, int>();
             _messageHistory = new Dictionary<string, List<Message>>();
+
+            _expectedSequenceNumbers["broadcast"] = CentralSequencer.GetCurrentSequenceNumber();
+
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Start()
         {
             _udpClient = new UdpClient(_port);
             _endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), _port);
-            _thread = new Thread(ReceiveMessages);
+            _thread = new Thread(() => ReceiveMessages(_cancellationTokenSource.Token));
             _thread.Start();
         }
 
-        public void SendBroadcastMessage(string messageContent)
+        public async void SendBroadcastMessage(string messageContent)
         {
-            /*if (_udpClient == null)
-                throw new Exception("Chatter is not started.");
-
-            string conversationKey = "broadcast";
-
-            if (!_messageHistory.ContainsKey(conversationKey))
-                _messageHistory[conversationKey] = new List<Message>();
-
-            if (!_expectedSequenceNumbers.ContainsKey(conversationKey))
-                _expectedSequenceNumbers[conversationKey] = 0;
-
-            int sequenceNumber = CentralSequencer.GetNextSequenceNumber();
-            _expectedSequenceNumbers[conversationKey]++;
-
-            Message message;
-            int i = 0;
-
-            foreach (Chatter chatter in AuthenticationServer.GetChatters())
-            {
-                if (chatter.GetUsername() == _username)
-                    continue;
-                message = new Message(true, sequenceNumber, _username, chatter.GetUsername(), messageContent);
-                _messageHistory[conversationKey].Add(message);
-
-                byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
-                IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), chatter.GetPort());
-                _udpClient.Send(data, data.Length, targetEndPoint);
-
-                if(i++ == 0)
-                    MessageSent?.Invoke(message);
-            }*/
-
             if (_udpClient == null)
                 throw new Exception("Chatter is not started.");
 
@@ -95,25 +68,28 @@ namespace DistributedChat.ChatSystems
                 _messageHistory[conversationKey] = new List<Message>();
             _messageHistory[conversationKey].Add(message);
 
-            if (!_expectedSequenceNumbers.ContainsKey(conversationKey))
-                _expectedSequenceNumbers[conversationKey] = sequenceNumber;
-            _expectedSequenceNumbers[conversationKey]++;
+            //_expectedSequenceNumbers[conversationKey]++;
 
             byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
-            foreach (Chatter chatter in AuthenticationServer.GetChatters())
+
+            for(int i = 0; i < 1; i++)
             {
-                if (chatter.GetUsername() == _username)
-                    continue;
+                foreach (Chatter chatter in AuthenticationServer.GetChatters())
+                {
+                    if (chatter.GetUsername() == _username)
+                        continue;
 
-                IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), chatter.GetPort());
-                _udpClient.Send(data, data.Length, targetEndPoint);
-                Debug.WriteLine($"Broadcast Message Sent: from {this.GetUsername()} to {chatter.GetUsername()} - current sequence {sequenceNumber}");
+                    IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), chatter.GetPort());
+                    _udpClient.Send(data, data.Length, targetEndPoint);
+                    Debug.WriteLine($"Broadcast Message Sent: from {this.GetUsername()} to {chatter.GetUsername()} - current sequence {sequenceNumber}");
+                }
+                if(i == 0)
+                    MessageSent?.Invoke(message);
+                await Task.Delay(500);
             }
-
-            MessageSent?.Invoke(message);
         }
 
-        public void SendMessage(string targetUsername, string messageContent)
+        public async void SendMessage(string targetUsername, string messageContent)
         {
             if (_udpClient == null)
                 throw new Exception("Chatter is not started.");
@@ -140,43 +116,65 @@ namespace DistributedChat.ChatSystems
 
             byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
             IPEndPoint targetEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), AuthenticationServer.GetChatterPort(targetUsername));
-            _udpClient.Send(data, data.Length, targetEndPoint);
 
-            MessageSent?.Invoke(message);
+            for(int i = 0; i < 1; i++)
+            {
+                _udpClient.Send(data, data.Length, targetEndPoint);
+                if (i == 0)
+                    MessageSent?.Invoke(message);
+                await Task.Delay(500);
+            }
 
             Debug.WriteLine($"Message Sent: from {this.GetUsername()} to {message.GetRecipient()} - current sequence {sequenceNumber} - current clock {_clocks[conversationKey]}");
         }
 
-        private void ReceiveMessages()
+        private void ReceiveMessages(CancellationToken token)
         {
             if (_udpClient == null)
                 throw new Exception("Chatter is not started.");
 
-            while (true)
+            while (!token.IsCancellationRequested)
             {
-                byte[] data = _udpClient.Receive(ref _endPoint);
-                string receivedMessage = Encoding.UTF8.GetString(data);
-                Message message = Message.MsgFromString(receivedMessage);
-                string conversationKey = message.IsBroadcast() ? "broadcast" : GetConversationKey(message.GetSender());
-
-                lock (_messageBuffers)
+                try
                 {
-                    if (!_messageBuffers.ContainsKey(conversationKey))
+                    byte[] data = _udpClient.Receive(ref _endPoint);
+                    string receivedMessage = Encoding.UTF8.GetString(data);
+                    Message message = Message.MsgFromString(receivedMessage);
+                    string conversationKey = message.IsBroadcast() ? "broadcast" : GetConversationKey(message.GetSender());
+
+                    int randomLostMessage = new Random().Next(0, 100);
+
+                    if (randomLostMessage <= 20)
                     {
-                        _messageBuffers[conversationKey] = new Dictionary<int, Message>();
-                        _expectedSequenceNumbers[conversationKey] = (message.IsBroadcast() ? CentralSequencer.GetCurrentSequenceNumber() : 0);
+                        //Debug.WriteLine($"Message Lost: from {message.GetSender()} to {message.GetRecipient()} - current sequence {message.GetSequenceNumber()}");
+                        continue;
                     }
 
-                    _messageBuffers[conversationKey][message.GetSequenceNumber()] = message;
-                    Debug.WriteLine($"Message Received: from {message.GetSender()} to {message.GetRecipient()} - expected sequence {_expectedSequenceNumbers[conversationKey]} - current sequence {message.GetSequenceNumber()}");
-
-                    while (_messageBuffers[conversationKey].ContainsKey(_expectedSequenceNumbers[conversationKey]))
+                    lock (_messageBuffers)
                     {
-                        ProcessMessage(_messageBuffers[conversationKey][_expectedSequenceNumbers[conversationKey]]);
-                        _messageBuffers[conversationKey].Remove(_expectedSequenceNumbers[conversationKey]);
-                        _expectedSequenceNumbers[conversationKey]++;
+                        // TODO : Separer la logique du broadcast
+                        if (!_messageBuffers.ContainsKey(conversationKey))
+                        {
+                            _messageBuffers[conversationKey] = new Dictionary<int, Message>();
+                            _expectedSequenceNumbers[conversationKey] = 0;
+                        }
+
+
+                        if (_messageBuffers[conversationKey].ContainsKey(message.GetSequenceNumber()))
+                            continue;
+
+                        _messageBuffers[conversationKey][message.GetSequenceNumber()] = message;
+                        Debug.WriteLine($"Message Received: from {message.GetSender()} to {this.GetUsername()} - expected sequence {_expectedSequenceNumbers[conversationKey]} - current sequence {message.GetSequenceNumber()} - key {conversationKey}");
+
+                        while (_messageBuffers[conversationKey].ContainsKey(_expectedSequenceNumbers[conversationKey]))
+                        {
+                            ProcessMessage(_messageBuffers[conversationKey][_expectedSequenceNumbers[conversationKey]]);
+                            _messageBuffers[conversationKey].Remove(_expectedSequenceNumbers[conversationKey]);
+                            _expectedSequenceNumbers[conversationKey]++;
+                        }
                     }
                 }
+                catch (Exception _) { }
             }
         }
 
@@ -198,11 +196,9 @@ namespace DistributedChat.ChatSystems
 
         public void Close()
         {
-            if (_udpClient == null || _thread == null)
-                throw new Exception("Chatter is not started.");
-
-            _thread.Interrupt();
-            _udpClient.Close();
+            _cancellationTokenSource.Cancel();
+            _udpClient?.Close();
+            _thread?.Interrupt();
         }
 
         public override string ToString()

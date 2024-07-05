@@ -15,12 +15,12 @@ namespace DistributedChat.Views
             InitializeComponent();
             chatter.MessageReceived += WriteMessageReceived;
             chatter.MessageSent += WriteMessageSent;
-            chatter.Start();
             AuthenticationServer.ChattersChanged += UpdatecomboBoxRecipient;
         }
 
         private void LoadForm(object sender, EventArgs e)
         {
+            _chatter.Start();
             AuthenticationServer.AuthenticateChatter(this._chatter);
             this.Text = this.Text.Replace("{Username}", _chatter.GetUsername()).Replace("{Port}", _chatter.GetPort().ToString());
             UpdatecomboBoxRecipient();
@@ -33,9 +33,15 @@ namespace DistributedChat.Views
 
         private void WriteAllChatMessage()
         {
-            richTextBoxRawData.Clear();
-            richTextBoxChatBox.Clear();
-
+            if (richTextBoxRawData.IsHandleCreated && richTextBoxChatBox.IsHandleCreated)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    richTextBoxRawData.Clear();
+                    richTextBoxChatBox.Clear();
+                }));
+            }
+            
             List<Message> messages = _chatter.GetMessageHistory((string)comboBoxRecipient.SelectedItem!);
 
             foreach (Message message in messages)
@@ -50,31 +56,37 @@ namespace DistributedChat.Views
         private void WriteMessageReceived(Message message)
         {
             // update the chat box with the message on the UI thread
-            Invoke(new MethodInvoker(delegate
+            if (richTextBoxRawData.IsHandleCreated && richTextBoxChatBox.IsHandleCreated)
             {
-                if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetSender()))
-                    return;
+                Invoke(new MethodInvoker(delegate
+                {
+                    if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetSender()))
+                        return;
 
-                richTextBoxRawData.AppendText(message.ToString());
+                    richTextBoxRawData.AppendText(message.ToString());
 
-                richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
-                richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
-            }));
+                    richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
+                    richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
+                }));
+            }
         }
 
         private void WriteMessageSent(Message message)
         {
             // update the chat box with the message on the UI thread
-            Invoke(new MethodInvoker(delegate
+            if (richTextBoxRawData.IsHandleCreated && richTextBoxChatBox.IsHandleCreated)
             {
-                if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetRecipient()))
-                    return;
+                Invoke(new MethodInvoker(delegate
+                {
+                    if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetRecipient()))
+                        return;
 
-                richTextBoxRawData.AppendText(message.ToString());
+                    richTextBoxRawData.AppendText(message.ToString());
 
-                richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast to everyone" : $"To {message.GetRecipient()}")} {new string('=', 30 - message.GetRecipient().Length)}\n");
-                richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
-            }));
+                    richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast to everyone" : $"To {message.GetRecipient()}")} {new string('=', 30 - message.GetRecipient().Length)}\n");
+                    richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
+                }));
+            }
         }
 
         private void UpdatecomboBoxRecipient()
