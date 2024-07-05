@@ -161,7 +161,8 @@
             comboBoxRecipient.Name = "comboBoxRecipient";
             comboBoxRecipient.Size = new Size(154, 28);
             comboBoxRecipient.TabIndex = 13;
-            comboBoxRecipient.TextChanged += TryValidateForm;
+            comboBoxRecipient.SelectedValueChanged += ChangeChatSelection;
+            comboBoxRecipient.TextChanged += ChangeChatSelection;
             // 
             // ChatForm
             // 

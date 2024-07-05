@@ -8,11 +8,16 @@ namespace DistributedChat.ChatSystems
 {
     public static class CentralSequencer
     {
-        private static Sequencer _centralSequencer = new Sequencer();
+        private static Sequencer _centralSequencer = new Sequencer(-1);
 
         public static int GetNextSequenceNumber()
         {
             return _centralSequencer.GetNextSequenceNumber();
+        }
+
+        public static int GetCurrentSequenceNumber()
+        {
+            return _centralSequencer.GetCurrentSequenceNumber();
         }
     }
 
@@ -30,6 +35,11 @@ namespace DistributedChat.ChatSystems
         public int GetNextSequenceNumber()
         {
             return Interlocked.Increment(ref _currentSequenceNumber);
+        }
+
+        public int GetCurrentSequenceNumber()
+        {
+            return _currentSequenceNumber;
         }
     }
 }

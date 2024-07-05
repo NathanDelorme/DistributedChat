@@ -1,5 +1,6 @@
 ﻿using DistributedChat.ChatSystems;
 using System.Diagnostics;
+using System.Windows.Forms;
 using Message = DistributedChat.ChatSystems.Message;
 
 namespace DistributedChat.Views
@@ -12,17 +13,17 @@ namespace DistributedChat.Views
         {
             this._chatter = chatter;
             InitializeComponent();
-            comboBoxRecipient.SelectedItem = "Broadcast";
-            chatter.MessageReceived += WriteMessage;
+            chatter.MessageReceived += WriteMessageReceived;
+            chatter.MessageSent += WriteMessageSent;
             chatter.Start();
             AuthenticationServer.ChattersChanged += UpdatecomboBoxRecipient;
-            UpdatecomboBoxRecipient();
         }
 
         private void LoadForm(object sender, EventArgs e)
         {
             AuthenticationServer.AuthenticateChatter(this._chatter);
             this.Text = this.Text.Replace("{Username}", _chatter.GetUsername()).Replace("{Port}", _chatter.GetPort().ToString());
+            UpdatecomboBoxRecipient();
         }
 
         private void ClosingForm(object sender, FormClosingEventArgs e)
@@ -30,71 +31,98 @@ namespace DistributedChat.Views
             AuthenticationServer.DeauthenticateChatter(this._chatter);
         }
 
-        private void WriteMessage(Message message)
+        private void WriteAllChatMessage()
+        {
+            richTextBoxRawData.Clear();
+            richTextBoxChatBox.Clear();
+
+            List<Message> messages = _chatter.GetMessageHistory((string)comboBoxRecipient.SelectedItem!);
+
+            foreach (Message message in messages)
+            {
+                if (message.GetSender() == _chatter.GetUsername())
+                    WriteMessageSent(message);
+                else
+                    WriteMessageReceived(message);
+            }
+        }
+
+        private void WriteMessageReceived(Message message)
         {
             // update the chat box with the message on the UI thread
-            if (richTextBoxChatBox.InvokeRequired)
+            Invoke(new MethodInvoker(delegate
             {
-                richTextBoxChatBox.Invoke(new MethodInvoker(delegate
-                {
-                    richTextBoxRawData.AppendText(message.ToString());
-                }));
-                richTextBoxChatBox.Invoke(new MethodInvoker(delegate
-                {
-                    ;
-                    richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
-                    richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
-                }));
-                return;
-            }
+                if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetSender()))
+                    return;
+
+                richTextBoxRawData.AppendText(message.ToString());
+
+                richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
+                richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
+            }));
+        }
+
+        private void WriteMessageSent(Message message)
+        {
+            // update the chat box with the message on the UI thread
+            Invoke(new MethodInvoker(delegate
+            {
+                if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetRecipient()))
+                    return;
+
+                richTextBoxRawData.AppendText(message.ToString());
+
+                richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast to everyone" : $"To {message.GetRecipient()}")} {new string('=', 30 - message.GetRecipient().Length)}\n");
+                richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
+            }));
         }
 
         private void UpdatecomboBoxRecipient()
         {
-            // use the chatters but display only their username
-            string selectedChatterUsername = comboBoxRecipient.SelectedItem == null ? "Broadcast" : comboBoxRecipient.SelectedText;
-
+            string selectedChatterUsername = comboBoxRecipient.SelectedItem == null ? "broadcast" : (string) comboBoxRecipient.SelectedItem;
             comboBoxRecipient.Items.Clear();
-            comboBoxRecipient.Items.Add("Broadcast");
+            comboBoxRecipient.Items.Add("broadcast");
 
             foreach (Chatter chatter in AuthenticationServer.GetChatters())
             {
                 if (chatter != this._chatter)
                     comboBoxRecipient.Items.Add(chatter.GetUsername());
+                    
             }
 
-            comboBoxRecipient.SelectedItem = "Broadcast";
             if (comboBoxRecipient.Items.Contains(selectedChatterUsername))
                 comboBoxRecipient.SelectedItem = selectedChatterUsername;
         }
 
         private void TryValidateForm(object sender, EventArgs e)
         {
-            buttonSend.Enabled = !string.IsNullOrWhiteSpace(richTextBoxMessage.Text) && comboBoxRecipient.SelectedItem != null;
+            buttonSend.Enabled = !string.IsNullOrWhiteSpace(richTextBoxMessage.Text) && !string.IsNullOrWhiteSpace((string)comboBoxRecipient.SelectedItem!);
         }
 
         private void SendMessage(object sender, EventArgs e)
         {
-            string recipient = comboBoxRecipient.SelectedItem!.ToString()!;
-            Debug.WriteLine($"Sending message to {recipient}");
+            string recipient = (string) comboBoxRecipient.SelectedItem!;
             string message = richTextBoxMessage.Text;
 
-            if (recipient == "Broadcast")
+            if (recipient == "broadcast")
             {
                 // send message to all chatters
-                foreach (Chatter chatter in AuthenticationServer.GetChatters())
-                {
-                    if (chatter != _chatter)
-                        _chatter.SendMessage(true, chatter.GetUsername(), message);
-                }
+                _chatter.SendBroadcastMessage(message);
             }
             else
             {
                 // send message to recipient
-                _chatter.SendMessage(false, recipient, message);
+                _chatter.SendMessage(recipient, message);
             }
 
             richTextBoxMessage.Clear();
+        }
+
+        private void ChangeChatSelection(object sender, EventArgs e)
+        {
+            TryValidateForm(sender, e);
+
+            WriteAllChatMessage();
         }
     }
 }
