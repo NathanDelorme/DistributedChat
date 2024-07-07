@@ -16,6 +16,7 @@ namespace DistributedChat.Views
             chatter.DataInOut += WriteRawData;
             chatter.MessageReceived += WriteMessageReceived;
             chatter.MessageSent += WriteMessageSent;
+            chatter.ReWriteChat += WriteAllChatMessage;
             AuthenticationServer.ChattersChanged += UpdatecomboBoxRecipient;
         }
 
@@ -39,17 +40,17 @@ namespace DistributedChat.Views
                 Invoke(new MethodInvoker(delegate
                 {
                     richTextBoxChatBox.Clear();
-                }));
-            }
-            
-            List<Message> messages = _chatter.GetMessageHistory((string)comboBoxRecipient.SelectedItem!);
+                    List<Message> messages = _chatter.GetMessageHistory((string)comboBoxRecipient.SelectedItem!);
+                    Console.WriteLine(messages.Count);
 
-            foreach (Message message in messages)
-            {
-                if (message.GetSender() == _chatter.GetUsername())
-                    WriteMessageSent(message);
-                else
-                    WriteMessageReceived(message);
+                    foreach (Message message in messages)
+                    {
+                        if (message.GetSender() == _chatter.GetUsername())
+                            WriteMessageSent(message);
+                        else
+                            WriteMessageReceived(message);
+                    }
+                }));
             }
         }
 

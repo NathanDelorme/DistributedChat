@@ -17,24 +17,23 @@ namespace DistributedChat.ChatSystems
         private static Dictionary<string, Dictionary<int, Message>> _savedMessageBuffers = new Dictionary<string, Dictionary<int, Message>>();
         private static Dictionary<string, Dictionary<int, Message>> _savedMessageHistory = new Dictionary<string, Dictionary<int, Message>>();
 
-        private static Dictionary<string, Dictionary<string, int>> _savedInternalClocks = new Dictionary<string, Dictionary<string, int>>();
-        private static Dictionary<string, Dictionary<string, int>> _savedExternalClocks = new Dictionary<string, Dictionary<string, int>>();
+        private static Dictionary<string, Dictionary<string, int>> _savedLamportClocks = new Dictionary<string, Dictionary<string, int>>();
 
-        private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedPrivateMessageBuffers = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
-        private static Dictionary<string, Dictionary<string, Dictionary<DateTime, Message>>> _savedPrivateMessageHistory = new Dictionary<string, Dictionary<string, Dictionary<DateTime, Message>>>();
+        private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedPrivateMessageHistory = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
+        private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedRawPrivateReceivedMessage = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
+
 
         private static void AddChatter(Chatter client)
         {
-            if (_savedInternalClocks.ContainsKey(client.GetUsername()))
+            if (_savedLamportClocks.ContainsKey(client.GetUsername()))
             {
                 client.SetMessageBuffers(_savedMessageBuffers[client.GetUsername()]);
                 client.SetMessageHistory(_savedMessageHistory[client.GetUsername()]);
 
-                client.SetInternalClocks(_savedInternalClocks[client.GetUsername()]);
-                client.SetExternalClocks(_savedExternalClocks[client.GetUsername()]);
+                client.SetLamportClocks(_savedLamportClocks[client.GetUsername()]);
 
-                client.SetPrivateMessageBuffers(_savedPrivateMessageBuffers[client.GetUsername()]);
                 client.SetPrivateMessageHistory(_savedPrivateMessageHistory[client.GetUsername()]);
+                client.SetRawPrivateReceivedMessage(_savedRawPrivateReceivedMessage[client.GetUsername()]);
             }
 
             for (int i = 0; i < Chatters.Length; i++)
@@ -53,11 +52,10 @@ namespace DistributedChat.ChatSystems
             _savedMessageBuffers[client.GetUsername()] = client.GetMessageBuffers();
             _savedMessageHistory[client.GetUsername()] = client.GetMessageHistory();
 
-            _savedInternalClocks[client.GetUsername()] = client.GetInternalClocks();
-            _savedExternalClocks[client.GetUsername()] = client.GetExternalClocks();
+            _savedLamportClocks[client.GetUsername()] = client.GetLamportClocks();
 
-            _savedPrivateMessageBuffers[client.GetUsername()] = client.GetPrivateMessageBuffers();
             _savedPrivateMessageHistory[client.GetUsername()] = client.GetPrivateMessageHistory();
+            _savedRawPrivateReceivedMessage[client.GetUsername()] = client.GetRawPrivateReceivedMessage();
 
             for (int i = 0; i < Chatters.Length; i++)
             {

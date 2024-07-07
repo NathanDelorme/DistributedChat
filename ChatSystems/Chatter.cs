@@ -16,6 +16,9 @@ namespace DistributedChat.ChatSystems
         public event MessageSentEventHandler? MessageSent;
         public delegate void MessageSentEventHandler(Message message);
 
+        public event ReWriteChatEventHandler? ReWriteChat;
+        public delegate void ReWriteChatEventHandler();
+
         private readonly string _username;
         private readonly string _password;
 
@@ -32,10 +35,9 @@ namespace DistributedChat.ChatSystems
         private Dictionary<int, Message> _messageBuffers = new Dictionary<int, Message>();
         private Dictionary<int, Message> _messageHistory = new Dictionary<int, Message>();
 
-        private Dictionary<string, int> _externalClocks = new Dictionary<string, int>();
-        private Dictionary<string, int> _internalClocks = new Dictionary<string, int>();
-        private Dictionary<string, Dictionary<int, Message>> _privateMessageBuffers = new Dictionary<string, Dictionary<int, Message>>();
-        private Dictionary<string, Dictionary<DateTime, Message>> _privateMessageHistory = new Dictionary<string, Dictionary<DateTime, Message>>();
+        private Dictionary<string, Dictionary<int, Message>> _privateMessageHistory = new Dictionary<string, Dictionary<int, Message>>();
+        private Dictionary<string, Dictionary<int, Message>> _rawPrivateReceivedMessage = new Dictionary<string, Dictionary<int, Message>>();
+        private Dictionary<string, int> _lamportClocks = new Dictionary<string, int>();
 
         public Chatter(string username, string password, int port)
         {
@@ -69,8 +71,10 @@ namespace DistributedChat.ChatSystems
             int sequenceNumber = ++_centralSequencer;
             _sequencerSemaphore.Release();
 
-            /*Debug.WriteLine($"Broadcast Delay : {(sequenceNumber == 1 ? 2000 : 500)}");
-            await Task.Delay(sequenceNumber == 1 ? 2000 : 500);*/
+            // add random delay
+            int rndDelay = new Random().Next(500, 2000);
+            Debug.WriteLine($"Broadcast Delay : {rndDelay}");
+            await Task.Delay(rndDelay);
 
             for (int i = 0; i < 10; i++)
             {
@@ -98,14 +102,15 @@ namespace DistributedChat.ChatSystems
 
             string conversationKey = recipient;
 
-            if (!_internalClocks.ContainsKey(conversationKey))
-                _internalClocks[conversationKey] = 1;
+            if(!_lamportClocks.ContainsKey(conversationKey))
+                _lamportClocks[conversationKey] = 0;
 
-            int tempSequencer = _internalClocks[conversationKey]++;
-            DateTime sending = DateTime.Now;
+            int tempSequencer = ++_lamportClocks[conversationKey];
 
-            /*Debug.WriteLine($"Broadcast Delay : {(sequenceNumber == 1 ? 2000 : 500)}");
-            await Task.Delay(sequenceNumber == 1 ? 2000 : 500);*/
+            // add random delay
+            int rndDelay = new Random().Next(500, 2000);
+            Debug.WriteLine($"Private Message Delay : {rndDelay}");
+            await Task.Delay(rndDelay);
 
             Message message = new Message(false, tempSequencer, _username, recipient, messageContent);
             byte[] data = Encoding.UTF8.GetBytes(message.MsgToString());
@@ -117,12 +122,11 @@ namespace DistributedChat.ChatSystems
             }
 
             if (!_privateMessageHistory.ContainsKey(conversationKey))
-                _privateMessageHistory[conversationKey] = new Dictionary<DateTime, Message>();
-            if (!_privateMessageBuffers.ContainsKey(conversationKey))
-                _privateMessageBuffers[conversationKey] = new Dictionary<int, Message>();
+                _privateMessageHistory[conversationKey] = new Dictionary<int, Message>();
 
-            _privateMessageHistory[recipient][sending] = message;
-            MessageSent?.Invoke(message);
+            _privateMessageHistory[conversationKey][tempSequencer] = message;
+
+            TryDisplayMessages(conversationKey);
         }
 
         private void ReceiveMessages(CancellationToken token)
@@ -140,10 +144,9 @@ namespace DistributedChat.ChatSystems
                     string conversationKey = message.IsBroadcast() ? "broadcast" : message.GetSender();
 
                     // random loss
-
                     int random = new Random().Next(1, 100);
 
-                    if (random <= 20)
+                    if (random <= 10)
                     {
                         Debug.WriteLine($"Message Loss: from {message.GetSender()} to {message.GetRecipient()} with sequence number {message.GetSequenceNumber()}");
                         continue;
@@ -151,10 +154,7 @@ namespace DistributedChat.ChatSystems
                     else
                         DataInOut?.Invoke(false, message);
 
-                    
-
-                    if (message.GetSender() != _username && message.GetContent() == "a")
-                        Debug.WriteLine($"{this.GetUsername()} received ACK from {message.GetSender()} with sequence number {message.GetSequenceNumber()}");
+                    DataInOut?.Invoke(false, message);
 
                     if (message.IsBroadcast())
                     {
@@ -181,16 +181,28 @@ namespace DistributedChat.ChatSystems
                     }
                     else
                     {
-                        if (!_externalClocks.ContainsKey(conversationKey))
-                            _externalClocks[conversationKey] = 0;
+                        if (!_privateMessageHistory.ContainsKey(conversationKey))
+                            _privateMessageHistory[conversationKey] = new Dictionary<int, Message>();
 
-                        if (!_privateMessageBuffers.ContainsKey(conversationKey))
-                            _privateMessageBuffers[conversationKey] = new Dictionary<int, Message>();
+                        if (!_lamportClocks.ContainsKey(conversationKey))
+                            _lamportClocks[conversationKey] = 0;
 
-                        if (!_privateMessageBuffers[conversationKey].ContainsKey(message.GetSequenceNumber()))
-                            _privateMessageBuffers[conversationKey][message.GetSequenceNumber()] = message;
+                        if (!_rawPrivateReceivedMessage.ContainsKey(conversationKey))
+                            _rawPrivateReceivedMessage[conversationKey] = new Dictionary<int, Message>();
 
-                        TryDisplayMessages(conversationKey);
+                        if (_rawPrivateReceivedMessage[conversationKey].ContainsKey(message.GetSequenceNumber()))
+                            continue;
+                        _rawPrivateReceivedMessage[conversationKey][message.GetSequenceNumber()] = message;
+
+                        _lamportClocks[conversationKey] = Math.Max(_lamportClocks[conversationKey], message.GetSequenceNumber()) + 1;
+
+                        if (!_privateMessageHistory[conversationKey].ContainsKey(_lamportClocks[conversationKey]))
+                        {
+                            message.SetSequenceNumber(_lamportClocks[conversationKey]);
+                            _privateMessageHistory[conversationKey][message.GetSequenceNumber()] = message;
+                            Debug.WriteLine($"{this.GetUsername()} received private message - {_lamportClocks[conversationKey]}: from {message.GetSender()} to {message.GetRecipient()} with sequence number {message.GetSequenceNumber()}");
+                            TryDisplayMessages(conversationKey);
+                        }
                     }
                 }
                 catch (Exception) { }
@@ -213,19 +225,7 @@ namespace DistributedChat.ChatSystems
 
         private void TryDisplayMessages(string conversationKey)
         {
-            while (_privateMessageBuffers.ContainsKey(conversationKey) && _privateMessageBuffers[conversationKey].ContainsKey(_externalClocks[conversationKey] + 1))
-            {
-                Message message = _privateMessageBuffers[conversationKey][_externalClocks[conversationKey] + 1];
-                _privateMessageBuffers[conversationKey].Remove(_externalClocks[conversationKey] + 1);
-
-                if (!_privateMessageHistory.ContainsKey(conversationKey))
-                    _privateMessageHistory[conversationKey] = new Dictionary<DateTime, Message>();
-
-                _privateMessageHistory[conversationKey][DateTime.Now] = message;
-                MessageReceived?.Invoke(message);
-
-                _externalClocks[conversationKey]++;
-            }
+            ReWriteChat?.Invoke();
         }
 
         public List<Message> GetMessageHistory(string conversationKey)
@@ -245,29 +245,25 @@ namespace DistributedChat.ChatSystems
 
         public int GetPort() => _port;
 
-        public Dictionary<string, int> GetInternalClocks() => _internalClocks;
-
-        public Dictionary<string, int> GetExternalClocks() => _externalClocks;
+        public Dictionary<string, int> GetLamportClocks() => _lamportClocks;
 
         public Dictionary<int, Message> GetMessageBuffers() => _messageBuffers;
 
         public Dictionary<int, Message> GetMessageHistory() => _messageHistory;
 
-        public Dictionary<string, Dictionary<int, Message>> GetPrivateMessageBuffers() => _privateMessageBuffers;
+        public Dictionary<string, Dictionary<int, Message>> GetPrivateMessageHistory() => _privateMessageHistory;
 
-        public Dictionary<string, Dictionary<DateTime, Message>> GetPrivateMessageHistory() => _privateMessageHistory;
+        public Dictionary<string, Dictionary<int, Message>> GetRawPrivateReceivedMessage() => _rawPrivateReceivedMessage;
 
-        public void SetInternalClocks(Dictionary<string, int> dictionary) => _internalClocks = dictionary;
-
-        public void SetExternalClocks(Dictionary<string, int> dictionary) => _externalClocks = dictionary;
+        public void SetLamportClocks(Dictionary<string, int> dictionary) => _lamportClocks = dictionary;
 
         public void SetMessageBuffers(Dictionary<int, Message> dictionary) => _messageBuffers = dictionary;
 
         public void SetMessageHistory(Dictionary<int, Message> dictionary) => _messageHistory = dictionary;
 
-        public void SetPrivateMessageBuffers(Dictionary<string, Dictionary<int, Message>> dictionary) => _privateMessageBuffers = dictionary;
+        public void SetPrivateMessageHistory(Dictionary<string, Dictionary<int, Message>> dictionary) => _privateMessageHistory = dictionary;
 
-        public void SetPrivateMessageHistory(Dictionary<string, Dictionary<DateTime, Message>> dictionary) => _privateMessageHistory = dictionary;
+        public void SetRawPrivateReceivedMessage(Dictionary<string, Dictionary<int, Message>> dictionary) => _rawPrivateReceivedMessage = dictionary;
 
     }
 }
