@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
-
+﻿
 namespace DistributedChat.ChatSystems
 {
     public class AuthenticationServer
@@ -21,7 +17,6 @@ namespace DistributedChat.ChatSystems
 
         private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedPrivateMessageHistory = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
         private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedRawPrivateReceivedMessage = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
-
 
         private static void AddChatter(Chatter client)
         {
