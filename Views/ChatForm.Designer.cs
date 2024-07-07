@@ -34,6 +34,7 @@
             Label labelChat;
             Panel panelMessage;
             Label labelMessage;
+            SplitContainer splitContainer;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChatForm));
             richTextBoxRawData = new RichTextBox();
             richTextBoxChatBox = new RichTextBox();
@@ -46,37 +47,45 @@
             labelChat = new Label();
             panelMessage = new Panel();
             labelMessage = new Label();
+            splitContainer = new SplitContainer();
             panelRawData.SuspendLayout();
             panelChatBox.SuspendLayout();
             panelMessage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer).BeginInit();
+            splitContainer.Panel1.SuspendLayout();
+            splitContainer.Panel2.SuspendLayout();
+            splitContainer.SuspendLayout();
             SuspendLayout();
             // 
             // panelRawData
             // 
             panelRawData.BackColor = SystemColors.ControlDarkDark;
             panelRawData.Controls.Add(richTextBoxRawData);
-            panelRawData.Location = new Point(12, 31);
+            panelRawData.Dock = DockStyle.Fill;
+            panelRawData.Location = new Point(0, 0);
             panelRawData.Name = "panelRawData";
-            panelRawData.Padding = new Padding(1);
-            panelRawData.Size = new Size(600, 83);
+            panelRawData.Padding = new Padding(1, 20, 1, 1);
+            panelRawData.Size = new Size(599, 183);
             panelRawData.TabIndex = 1;
             // 
             // richTextBoxRawData
             // 
             richTextBoxRawData.BorderStyle = BorderStyle.None;
             richTextBoxRawData.Dock = DockStyle.Fill;
-            richTextBoxRawData.Location = new Point(1, 1);
+            richTextBoxRawData.Location = new Point(1, 20);
             richTextBoxRawData.Name = "richTextBoxRawData";
-            richTextBoxRawData.Size = new Size(598, 81);
+            richTextBoxRawData.ReadOnly = true;
+            richTextBoxRawData.Size = new Size(597, 162);
             richTextBoxRawData.TabIndex = 2;
             richTextBoxRawData.Text = "";
             // 
             // labelRawData
             // 
             labelRawData.BackColor = Color.Transparent;
-            labelRawData.Location = new Point(12, 9);
+            labelRawData.Dock = DockStyle.Top;
+            labelRawData.Location = new Point(0, 0);
             labelRawData.Name = "labelRawData";
-            labelRawData.Size = new Size(600, 19);
+            labelRawData.Size = new Size(599, 19);
             labelRawData.TabIndex = 8;
             labelRawData.Text = "Raw Data";
             labelRawData.TextAlign = ContentAlignment.BottomLeft;
@@ -85,28 +94,31 @@
             // 
             panelChatBox.BackColor = SystemColors.ControlDarkDark;
             panelChatBox.Controls.Add(richTextBoxChatBox);
-            panelChatBox.Location = new Point(12, 146);
+            panelChatBox.Dock = DockStyle.Fill;
+            panelChatBox.Location = new Point(0, 0);
             panelChatBox.Name = "panelChatBox";
-            panelChatBox.Padding = new Padding(1);
-            panelChatBox.Size = new Size(600, 223);
+            panelChatBox.Padding = new Padding(1, 20, 1, 1);
+            panelChatBox.Size = new Size(599, 179);
             panelChatBox.TabIndex = 9;
             // 
             // richTextBoxChatBox
             // 
             richTextBoxChatBox.BorderStyle = BorderStyle.None;
             richTextBoxChatBox.Dock = DockStyle.Fill;
-            richTextBoxChatBox.Location = new Point(1, 1);
+            richTextBoxChatBox.Location = new Point(1, 20);
             richTextBoxChatBox.Name = "richTextBoxChatBox";
-            richTextBoxChatBox.Size = new Size(598, 221);
+            richTextBoxChatBox.ReadOnly = true;
+            richTextBoxChatBox.Size = new Size(597, 158);
             richTextBoxChatBox.TabIndex = 2;
             richTextBoxChatBox.Text = "";
             // 
             // labelChat
             // 
             labelChat.BackColor = Color.Transparent;
-            labelChat.Location = new Point(12, 116);
+            labelChat.Dock = DockStyle.Top;
+            labelChat.Location = new Point(0, 0);
             labelChat.Name = "labelChat";
-            labelChat.Size = new Size(600, 27);
+            labelChat.Size = new Size(599, 19);
             labelChat.TabIndex = 10;
             labelChat.Text = "Chat";
             labelChat.TextAlign = ContentAlignment.BottomLeft;
@@ -142,6 +154,25 @@
             labelMessage.Text = "Message";
             labelMessage.TextAlign = ContentAlignment.BottomLeft;
             // 
+            // splitContainer
+            // 
+            splitContainer.Location = new Point(13, 3);
+            splitContainer.Name = "splitContainer";
+            splitContainer.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainer.Panel1
+            // 
+            splitContainer.Panel1.Controls.Add(labelRawData);
+            splitContainer.Panel1.Controls.Add(panelRawData);
+            // 
+            // splitContainer.Panel2
+            // 
+            splitContainer.Panel2.Controls.Add(labelChat);
+            splitContainer.Panel2.Controls.Add(panelChatBox);
+            splitContainer.Size = new Size(599, 366);
+            splitContainer.SplitterDistance = 183;
+            splitContainer.TabIndex = 16;
+            // 
             // buttonSend
             // 
             buttonSend.Enabled = false;
@@ -168,14 +199,11 @@
             // 
             AutoScaleMode = AutoScaleMode.None;
             ClientSize = new Size(624, 497);
+            Controls.Add(splitContainer);
             Controls.Add(labelMessage);
             Controls.Add(panelMessage);
             Controls.Add(comboBoxRecipient);
             Controls.Add(buttonSend);
-            Controls.Add(labelChat);
-            Controls.Add(panelChatBox);
-            Controls.Add(labelRawData);
-            Controls.Add(panelRawData);
             Font = new Font("Segoe UI", 11F);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
@@ -190,6 +218,10 @@
             panelRawData.ResumeLayout(false);
             panelChatBox.ResumeLayout(false);
             panelMessage.ResumeLayout(false);
+            splitContainer.Panel1.ResumeLayout(false);
+            splitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();
+            splitContainer.ResumeLayout(false);
             ResumeLayout(false);
         }
 

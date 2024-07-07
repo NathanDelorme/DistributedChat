@@ -9,6 +9,12 @@ namespace DistributedChat
         public AuthenticationForm()
         {
             InitializeComponent();
+            AuthenticationServer.ChattersChanged += TryValidateForm;
+        }
+
+        private void TryValidateForm()
+        {
+            TryValidateForm(null, null);
         }
 
         private void TryValidateForm(object sender, EventArgs e)
@@ -16,7 +22,7 @@ namespace DistributedChat
             labelError.Text = "";
             buttonInstantiate.Enabled = false;
 
-            if(string.IsNullOrWhiteSpace(textBoxUsername.Text))
+            if (string.IsNullOrWhiteSpace(textBoxUsername.Text))
             {
                 labelError.Text = "Username is required";
                 return;
@@ -52,8 +58,12 @@ namespace DistributedChat
             textBoxPassword.Text = numericUpDownPort.Value.ToString();
 
             ChatForm chatForm = new ChatForm(chatter);
-            chatForm.FormClosing += (sender, e) => { TryValidateForm(sender, e); };
             chatForm.Show();
+        }
+
+        private void AuthenticationForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

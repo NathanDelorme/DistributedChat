@@ -7,20 +7,16 @@
       "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:chatsystems\\chatter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\chatsystems\\authenticationserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:chatsystems\\authenticationserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|C:\\Users\\natha\\Desktop\\DistributedChat\\views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\chatsystems\\centralsequence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:chatsystems\\centralsequence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\chatsystems\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:chatsystems\\message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|c:\\users\\natha\\desktop\\distributedchat\\views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{33C23FFA-325F-4CEA-A9D1-1FDC3448FF44}|DistributedChat.csproj|solutionrelative:views\\chatform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,19 +26,45 @@
       "DocumentGroups": [
         {
           "DockedWidth": 207,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Chatter.cs",
+              "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Chatter.cs",
+              "RelativeDocumentMoniker": "ChatSystems\\Chatter.cs",
+              "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Chatter.cs",
+              "RelativeToolTip": "ChatSystems\\Chatter.cs",
+              "ViewState": "AQIAAK4BAAAAAAAAAAAAAMIBAAATAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-07-05T21:44:06.809Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "AuthenticationServer.cs",
+              "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\AuthenticationServer.cs",
+              "RelativeDocumentMoniker": "ChatSystems\\AuthenticationServer.cs",
+              "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\AuthenticationServer.cs",
+              "RelativeToolTip": "ChatSystems\\AuthenticationServer.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAsAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-07-05T21:43:45.562Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "ChatForm.cs",
               "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\Views\\ChatForm.cs",
               "RelativeDocumentMoniker": "Views\\ChatForm.cs",
               "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\Views\\ChatForm.cs",
               "RelativeToolTip": "Views\\ChatForm.cs",
-              "ViewState": "AQIAABEAAAAAAAAAAAApwCYAAAA/AAAA",
+              "ViewState": "AQIAACcAAAAAAAAAAAAhwEAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-05T13:13:39.164Z",
+              "WhenOpened": "2024-07-05T21:38:27.11Z",
               "EditorCaption": ""
             },
             {
@@ -54,47 +76,8 @@
               "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\Views\\ChatForm.cs [Conception]",
               "RelativeToolTip": "Views\\ChatForm.cs [Conception]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-05T13:13:37.325Z",
+              "WhenOpened": "2024-07-05T21:38:25.624Z",
               "EditorCaption": " [Conception]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Message.cs",
-              "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Message.cs",
-              "RelativeDocumentMoniker": "ChatSystems\\Message.cs",
-              "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Message.cs",
-              "RelativeToolTip": "ChatSystems\\Message.cs",
-              "ViewState": "AQIAACkAAAAAAAAAAAAAwBEAAAAkAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-05T13:06:02.399Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "CentralSequence.cs",
-              "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\CentralSequence.cs",
-              "RelativeDocumentMoniker": "ChatSystems\\CentralSequence.cs",
-              "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\CentralSequence.cs",
-              "RelativeToolTip": "ChatSystems\\CentralSequence.cs",
-              "ViewState": "AQIAAAMAAAAAAAAAAAAAABEAAAAyAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-05T13:01:41.966Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Chatter.cs",
-              "DocumentMoniker": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Chatter.cs",
-              "RelativeDocumentMoniker": "ChatSystems\\Chatter.cs",
-              "ToolTip": "C:\\Users\\natha\\Desktop\\DistributedChat\\ChatSystems\\Chatter.cs",
-              "RelativeToolTip": "ChatSystems\\Chatter.cs",
-              "ViewState": "AQIAAMwAAAAAAAAAAAASwNYAAAAxAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-05T12:52:40.938Z",
-              "EditorCaption": ""
             }
           ]
         }

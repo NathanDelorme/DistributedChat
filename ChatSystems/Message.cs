@@ -1,4 +1,8 @@
 ﻿
+using System.Net.Sockets;
+using System.Net;
+using System.Threading;
+
 namespace DistributedChat.ChatSystems
 {
     public class Message
@@ -22,6 +26,8 @@ namespace DistributedChat.ChatSystems
 
         public int GetSequenceNumber() => this._sequenceNumber;
 
+        public void SetSequenceNumber(int sequenceNumber) => this._sequenceNumber = sequenceNumber;
+
         public string GetSender() => this._sender;
 
         public string GetRecipient() => this._recipient;
@@ -41,8 +47,7 @@ namespace DistributedChat.ChatSystems
 
         public override string ToString()
         {
-            return "============================\n" +
-                $"{(_isBroadcast ? "Broadcast - " : "")}Sequence Number {this._sequenceNumber} - Sender {this._sender} - Recipient {this._recipient}\n" +
+            return $"{(_isBroadcast ? "Broadcast - " : "")}Sequence Number {this._sequenceNumber} - Sender {this._sender} - Recipient {this._recipient}\n" +
                 $"Content\n{this._content}\n";
         }
     }

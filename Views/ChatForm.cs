@@ -13,6 +13,7 @@ namespace DistributedChat.Views
         {
             this._chatter = chatter;
             InitializeComponent();
+            chatter.DataInOut += WriteRawData;
             chatter.MessageReceived += WriteMessageReceived;
             chatter.MessageSent += WriteMessageSent;
             AuthenticationServer.ChattersChanged += UpdatecomboBoxRecipient;
@@ -37,7 +38,6 @@ namespace DistributedChat.Views
             {
                 Invoke(new MethodInvoker(delegate
                 {
-                    richTextBoxRawData.Clear();
                     richTextBoxChatBox.Clear();
                 }));
             }
@@ -53,6 +53,19 @@ namespace DistributedChat.Views
             }
         }
 
+        private void WriteRawData(bool isSent, Message message)
+        {
+            // update the raw data box with the message on the UI thread
+            if (richTextBoxRawData.IsHandleCreated)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    richTextBoxRawData.AppendText($"{(isSent ? "Sent" : "Received")} {new string('=', 30 - (isSent ? 4 : 8))}\n");
+                    richTextBoxRawData.AppendText(message.ToString());
+                }));
+            }
+        }
+
         private void WriteMessageReceived(Message message)
         {
             // update the chat box with the message on the UI thread
@@ -63,8 +76,6 @@ namespace DistributedChat.Views
                     if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetSender()))
                         return;
 
-                    richTextBoxRawData.AppendText(message.ToString());
-
                     richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast f" : "F")}rom {message.GetSender()} {new string('=', 30 - message.GetSender().Length)}\n");
                     richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
                 }));
@@ -74,14 +85,12 @@ namespace DistributedChat.Views
         private void WriteMessageSent(Message message)
         {
             // update the chat box with the message on the UI thread
-            if (richTextBoxRawData.IsHandleCreated && richTextBoxChatBox.IsHandleCreated)
+            if (richTextBoxChatBox.IsHandleCreated)
             {
                 Invoke(new MethodInvoker(delegate
                 {
                     if ((message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != "broadcast") || (!message.IsBroadcast() && (string)comboBoxRecipient.SelectedItem! != message.GetRecipient()))
                         return;
-
-                    richTextBoxRawData.AppendText(message.ToString());
 
                     richTextBoxChatBox.AppendText($"{(message.IsBroadcast() ? "Broadcast to everyone" : $"To {message.GetRecipient()}")} {new string('=', 30 - message.GetRecipient().Length)}\n");
                     richTextBoxChatBox.AppendText($"{message.GetContent()}\n");
@@ -104,28 +113,24 @@ namespace DistributedChat.Views
 
             if (comboBoxRecipient.Items.Contains(selectedChatterUsername))
                 comboBoxRecipient.SelectedItem = selectedChatterUsername;
+            else
+                comboBoxRecipient.SelectedItem = "broadcast";
         }
 
         private void TryValidateForm(object sender, EventArgs e)
         {
-            buttonSend.Enabled = !string.IsNullOrWhiteSpace(richTextBoxMessage.Text) && !string.IsNullOrWhiteSpace((string)comboBoxRecipient.SelectedItem!);
+            buttonSend.Enabled = comboBoxRecipient.Items.Count > 1 && !string.IsNullOrWhiteSpace(richTextBoxMessage.Text) && !string.IsNullOrWhiteSpace((string)comboBoxRecipient.SelectedItem!);
         }
 
-        private void SendMessage(object sender, EventArgs e)
+        private async void SendMessage(object sender, EventArgs e)
         {
             string recipient = (string) comboBoxRecipient.SelectedItem!;
             string message = richTextBoxMessage.Text;
 
             if (recipient == "broadcast")
-            {
-                // send message to all chatters
-                _chatter.SendBroadcastMessage(message);
-            }
+                await Task.Run(() => _chatter.SendBroadcastMessage(message));
             else
-            {
-                // send message to recipient
-                _chatter.SendMessage(recipient, message);
-            }
+                await Task.Run(() => _chatter.SendMessage(recipient, message));
 
             richTextBoxMessage.Clear();
         }
@@ -133,7 +138,6 @@ namespace DistributedChat.Views
         private void ChangeChatSelection(object sender, EventArgs e)
         {
             TryValidateForm(sender, e);
-
             WriteAllChatMessage();
         }
     }

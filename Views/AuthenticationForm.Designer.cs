@@ -151,6 +151,7 @@
             Name = "AuthenticationForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Authentication";
+            FormClosed += AuthenticationForm_FormClosed;
             Load += TryValidateForm;
             ((System.ComponentModel.ISupportInitialize)numericUpDownPort).EndInit();
             ResumeLayout(false);
