@@ -15,7 +15,7 @@ namespace DistributedChat.ChatSystems
 
         private static Dictionary<string, Dictionary<string, int>> _savedLamportClocks = new Dictionary<string, Dictionary<string, int>>();
 
-        private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedPrivateMessageHistory = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
+        private static Dictionary<string, Dictionary<string, Dictionary<Tuple<int, string>, Message>>> _savedPrivateMessageHistory = new Dictionary<string, Dictionary<string, Dictionary<Tuple<int, string>, Message>>>();
         private static Dictionary<string, Dictionary<string, Dictionary<int, Message>>> _savedRawPrivateReceivedMessage = new Dictionary<string, Dictionary<string, Dictionary<int, Message>>>();
 
         private static void AddChatter(Chatter client)
@@ -62,6 +62,16 @@ namespace DistributedChat.ChatSystems
                     break;
                 }
             }
+        }
+
+        public static int GetIncrementForLamport(Chatter chatter)
+        {
+            for (int i = 0; i < Chatters.Length; i++)
+            {
+                if (Chatters[i] == chatter)
+                    return i + 1;
+            }
+            return -1;
         }
 
         public static string AuthenticationValidity(Chatter chatterToAuthenticate)

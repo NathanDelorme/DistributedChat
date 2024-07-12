@@ -109,7 +109,6 @@ namespace DistributedChat.Views
             {
                 if (chatter != this._chatter)
                     comboBoxRecipient.Items.Add(chatter.GetUsername());
-                    
             }
 
             if (comboBoxRecipient.Items.Contains(selectedChatterUsername))
