@@ -100,7 +100,6 @@ namespace DistributedChat.ChatSystems
             if (_udpClient == null)
                 throw new Exception("Chatter is not started.");
 
-            // Lamport clock update
             if (!_lamportClocks.ContainsKey(recipient))
                 _lamportClocks[recipient] = 0;
 
@@ -109,8 +108,6 @@ namespace DistributedChat.ChatSystems
                 _lamportClocks[recipient] += 2;
             else
                 _lamportClocks[recipient] += 1;
-
-            //_lamportClocks[recipient] += AuthenticationServer.GetIncrementForLamport(this);
 
             int sequenceNumber = _lamportClocks[recipient];
 
